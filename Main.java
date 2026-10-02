@@ -10,7 +10,7 @@ public Main () {
 
 super("Visual Art");
 
-setSize(Toolkit.getDefaultToolkit().getScreenSize().width, Toolkit.getDefaultToolkit().getScreenSize().height);
+
 setSize(WIDTH, HEIGHT);
 
 Game play = new Game();
@@ -19,7 +19,6 @@ Game play = new Game();
 
 //Color RoyalBlue = new Color(22,13,193);
 
-setBackground(Color.BLACK);
 
 getContentPane().add(play);
 

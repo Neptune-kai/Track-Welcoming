@@ -1,126 +1,84 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
- 
+
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
- 
+
 /**
- * Starter MileSplit Texas results scraper.
+ * Downloads the raw (plain-text) results for the 2026 UIL State Track & Field
+ * Championships from Texas MileSplit and pulls out the top finishers for an event.
  *
- * Setup: add Jsoup to your project.
- *   Maven:  org.jsoup:jsoup:1.17.2
- *   or download the jar from https://jsoup.org/download and add it to your classpath.
- *
- * Open the target page in your browser first and confirm it has a normal
- * <table> of results. Selectors below are untested against the live site.
- * Please respect MileSplit's Terms of Service and robots.txt.
+ * Requires the Jsoup library on your classpath.
+ * Please respect MileSplit's Terms of Service.
  */
 public class Webscrape {
- 
+
+    public static final String RESULTS_URL =
+        "https://tx.milesplit.com/meets/746342-uil-state-hs-track-and-field-championships-2026/results/1304569/raw";
+
     private String url;
-    private int delayMillis;
-    private int maxPages;
-    private List<String[]> rows;
-    private String[] headers;
- 
+    private String[] lines;
+
+    public Webscrape() {
+        this(RESULTS_URL);
+    }
+
     public Webscrape(String url) {
-        this(url, 5000, 5);
-    }
- 
-    public Webscrape(String url, int delayMillis, int maxPages) {
         this.url = url;
-        this.delayMillis = delayMillis;
-        this.maxPages = maxPages;
-        this.rows = new ArrayList<>();
-        this.headers = new String[0];
+        this.lines = new String[0];
     }
- 
-    /** Fetches each page, parses the first results table, and stores the rows. */
-    public void scrape() throws IOException, InterruptedException {
-        for (int page = 1; page <= maxPages; page++) {
-            String pageUrl = (page == 1) ? url : url + "&page=" + page;
- 
-            Document doc = Jsoup.connect(pageUrl)
-                    .userAgent("Mozilla/5.0 (personal research scraper)")
-                    .timeout(30000)
-                    .get();
- 
-            Element table = doc.selectFirst("table");
-            if (table == null) {
-                System.out.println("No table found on page " + page + ", stopping.");
+
+    /** Downloads the page and stores its text, one entry per line. */
+    public void load() throws IOException {
+        Document doc = Jsoup.connect(url)
+                .userAgent("Mozilla/5.0 (personal school project)")
+                .timeout(30000)
+                .get();
+
+        // The raw results sit in a preformatted block; fall back to the whole page.
+        Element pre = doc.selectFirst("pre");
+        String text = (pre != null) ? pre.wholeText() : doc.body().wholeText();
+        lines = text.split("\\r?\\n");
+    }
+
+    public boolean isLoaded() {
+        return lines.length > 0;
+    }
+
+    /**
+     * Returns up to 'count' boys finishers for one event and class.
+     * Each row is: {place, name, grade, school, time, wind}.
+     *
+     * @param event    e.g. "100 meter Dash", "800 meter Run", "110 meter Hurdles"
+     * @param division e.g. "6A"
+     */
+    public List<String[]> getTop(String event, String division, int count) {
+        String header = "Boys " + event + " Finals " + division;
+        List<String[]> out = new ArrayList<>();
+
+        // find the section header
+        int i = 0;
+        while (i < lines.length && !lines[i].trim().equals(header)) {
+            i++;
+        }
+        i += 2; // skip the header line and the column-names line
+
+        // read rows until the next section (rows start with a place number)
+        while (i < lines.length && out.size() < count) {
+            String line = lines[i].trim();
+            if (line.isEmpty() || !Character.isDigit(line.charAt(0))) {
                 break;
             }
- 
-            if (headers.length == 0) {
-                Elements ths = table.select("th");
-                headers = new String[ths.size()];
-                for (int i = 0; i < ths.size(); i++) {
-                    headers[i] = ths.get(i).text();
-                }
+            // columns: PLACE, NAME, GRADE, GENDER, TEAM, MARK, HEAT, WIND
+            String[] c = line.split("\t", -1);
+            if (c.length >= 6) {
+                String wind = (c.length > 7) ? c[7] : "";
+                out.add(new String[]{c[0], c[1], c[2], c[4], c[5], wind});
             }
- 
-            int added = 0;
-            for (Element tr : table.select("tr")) {
-                Elements tds = tr.select("td");
-                if (tds.isEmpty()) continue;
-                String[] row = new String[tds.size()];
-                for (int i = 0; i < tds.size(); i++) {
-                    row[i] = tds.get(i).text();
-                }
-                rows.add(row);
-                added++;
-            }
-            System.out.println("Page " + page + ": " + added + " rows");
-            if (added == 0) break;
- 
-            Thread.sleep(delayMillis); // be polite
+            i++;
         }
-    }
- 
-    /** Writes the scraped data to a CSV file. */
-    public void writeCsv(String path) throws IOException {
-        try (PrintWriter out = new PrintWriter(path, "UTF-8")) {
-            out.println(toCsvLine(headers));
-            for (String[] row : rows) {
-                out.println(toCsvLine(row));
-            }
-        }
-        System.out.println("Wrote " + rows.size() + " rows to " + path);
-    }
- 
-    private String toCsvLine(String[] values) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < values.length; i++) {
-            if (i > 0) sb.append(',');
-            sb.append('"').append(values[i].replace("\"", "\"\"")).append('"');
-        }
-        return sb.toString();
-    }
- 
-    public List<String[]> getRows() {
-        return rows;
-    }
- 
-    public String[] getHeaders() {
-        return headers;
-    }
- 
-    public static void main(String[] args) {
-        // Paste a Texas rankings/results URL from your browser here.
-        String url = "https://tx.milesplit.com/rankings/leaders/high-school-boys/outdoor-track-and-field?year=2026&event=100m";
- 
-        Webscrape scraper = new Webscrape(url);
-        try {
-            scraper.scrape();
-            scraper.writeCsv("milesplit_tx_results.csv");
-        } catch (IOException e) {
-            System.out.println("Request failed (the site may be blocking bots): " + e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        return out;
     }
 }
