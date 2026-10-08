@@ -17,7 +17,7 @@ Game play = new Game();
 
 ((Component) play).setFocusable(true);
 
-//Color RoyalBlue = new Color(22,13,193);
+
 
 
 getContentPane().add(play);

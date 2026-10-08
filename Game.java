@@ -20,26 +20,30 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 	private volatile String status = "Loading results...";
 	private int eventIndex = 0;      // starts on the 100m
 	private int divisionIndex = 5;   // starts on 6A
-
+	private char screen;
+	private Runner runner;
+	JButton rankButton = new JButton("Click to see the rankings");
+	
 	public Game() {
 		new Thread(this).start();
 		this.addKeyListener(this);
 		this.addMouseListener(this);
 		back = null;
-
+		screen='S';
 		loadData();
+		knowrunner();
+		
 	}
 
 	// Downloads the results on a separate thread so the window doesn't freeze.
 	private void loadData() {
-		new Thread(() -> {
 			try {
 				scraper.load();
 				updateRows();
 			} catch (Exception e) {
 				status = "Could not load results: " + e.getMessage();
 			}
-		}).start();
+		
 	}
 
 	// Grabs the top 8 for the current event and class.
@@ -55,28 +59,23 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 	public void run() {
 		try {
 			while (true) {
-				Thread.sleep(5);
+				Thread.sleep(16);
 				repaint();
 			}
 		} catch (Exception e) {
 		}
 	}
-
-	public void paint(Graphics g) {
-		Graphics2D twoDgraph = (Graphics2D) g;
-
-		if (back == null) {
-			back = (BufferedImage) (createImage(getWidth(), getHeight()));
-		}
-
-		Graphics g2d = back.createGraphics();
-
-		g2d.clearRect(0, 0, getSize().width, getSize().height);
-
-		// START CODING GRAPHICS HERE
-
-		// black background
-		g2d.setColor(Color.BLACK);
+  public void screen(Graphics g2d){
+   switch(screen){
+      case 'S': 
+	  g2d.fillRect(0, 0, getSize().width, getSize().height);
+	  g2d.setColor(Color.white);
+		   g2d.drawString("Welcome to the game bro", 200, 400);
+	 		
+		 g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
+	  break;
+	  case 'E':
+	g2d.setColor(Color.BLACK);
 		g2d.fillRect(0, 0, getSize().width, getSize().height);
 
 		// title
@@ -94,6 +93,8 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 		g2d.drawString("School", 680, 150);
 		g2d.drawString("Time", 1100, 150);
 		g2d.drawString("Wind", 1250, 150);
+
+		g2d.drawString(runner.getName(), 160, 150);
 
 		// the results
 		g2d.setColor(Color.WHITE);
@@ -118,10 +119,33 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 		g2d.setColor(Color.GRAY);
 		g2d.drawString("Left/Right arrows: change event     Up/Down arrows: change class", 60, 700);
 
+		break;
+   }
+}
+	public void paint(Graphics g) {
+		Graphics2D twoDgraph = (Graphics2D) g;
+
+		if (back == null) {
+			back = (BufferedImage) (createImage(getWidth(), getHeight()));
+		}
+
+		Graphics g2d = back.createGraphics();
+
+		g2d.clearRect(0, 0, getSize().width, getSize().height);
+
+		// START CODING GRAPHICS HERE
+		g2d.fillRect(0, 0, getSize().width, getSize().height);
+		
+		screen(g2d);
 		// This line tells the program to draw everything above.
 		twoDgraph.drawImage(back, 0, 0, null);
 	}
+		
 
+	public void knowrunner() {
+		String runners = JOptionPane.showInputDialog(this, "Enter name for Player 1:");
+			 runner = new Runner(runners != null && !runners.trim().isEmpty() ? runners : "Player 1");
+	}
 	@Override
 	public void mouseClicked(MouseEvent e) {
 	}
@@ -141,6 +165,10 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 	@Override
 	public void keyPressed(KeyEvent e) {
 		int k = e.getKeyCode();
+		System.out.println(k);
+		if(k==32){
+			screen='E';
+		}    
 		if (k == KeyEvent.VK_RIGHT) {
 			eventIndex = (eventIndex + 1) % EVENTS.length;
 		} else if (k == KeyEvent.VK_LEFT) {
@@ -154,7 +182,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 		}
 		if (scraper.isLoaded()) {
 			updateRows();
-		}
+		}      
 	}
 
 	@Override
