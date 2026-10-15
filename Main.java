@@ -19,7 +19,6 @@ Game play = new Game();
 
 
 
-
 getContentPane().add(play);
 
 setVisible(true);

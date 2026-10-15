@@ -1,20 +1,22 @@
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+
 
 
 public class Runner {
-private String name;
+public String name;
+public double time;
 
+public Runner() {
+    
+}
 
 public Runner(String name){
     this.name = name;
-   
+    this.time = 0;
 }
+
 public String getName(){
     return name;
 }
-public void setName(String name){
-    this.name=name;
-}
+
+
 }
