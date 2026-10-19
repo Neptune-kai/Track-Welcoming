@@ -25,7 +25,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private Runner runner;
     JButton rankButton = new JButton("Click to see the rankings");
     JButton timebutton = new JButton("Click to input your time");
-	private Image backgroundImage;
+	private int runnertime;
     
     public Game() {
         // Use null layout so setBounds works properly
@@ -50,11 +50,11 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         this.addMouseListener(this);
         setFocusable(true); // Ensure panel receives key events
         requestFocusInWindow();
-        backgroundImage = new ImageIcon("C:\\Users\\S1806291\\Downloads\\Track-Welcoming\\src\\background.jpg").getImage();	
+        runnertime = 0;
         back = null;
         screen = 'S';
         loadData();
-        buttonset(timebutton, 550, 550, 300, 50);
+        buttonset(timebutton, 550,600, 300, 50);
         add(timebutton);
         knowrunner();
     }
@@ -99,6 +99,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         switch (screen) {
             case 'S': 
                 g2d.setColor(Color.white);
+                      //g2d.drawImage(new ImageIcon(bi.getBackground()).getImage(),0,0,getWidth(),getHeight(),this);
                 g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
                 g2d.setColor(Color.black);
                 g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
@@ -108,7 +109,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 break;
                 
             case 'E':
-				g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+				//g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
                 rankButton.setVisible(false);
                 
                 g2d.setColor(Color.white);
@@ -154,6 +155,8 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 if(runner.time != 0) {
                     g2d.setColor(Color.BLUE);
                     g2d.drawString("Your name: " + runner.getName(), 60, 750);
+                    g2d.drawString("Your time: " + runner.time, 60, 780);
+                    //g2d.drawString("Your rank: " + getRunnerTime((int)runner.time), 60, 810);
                 }
                 break;
         }
@@ -206,6 +209,14 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
             }
         });
     
+    }
+    public int getRunnerTime100(int runnerTime) {
+    if (runner.time <= 10.8) {
+        return -1;
+    }
+   // else{
+     //   runner.time = runnerTime;
+        return runnerTime;
     }
 
     @Override
