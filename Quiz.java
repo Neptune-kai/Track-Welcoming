@@ -1,4 +1,3 @@
-import javax.swing.*;
 import java.util.ArrayList;
 
 
@@ -9,12 +8,9 @@ public class Quiz {
         questions = new ArrayList<>();
         createquestion();
     }
-    public void createquestion(){
-        questions.add("What is your ideal running distance?");
-        questions.add("Are you able to sprint?");
-        questions.add("Would you like to jump over hurdles?");
-        questions.add("Would you rather jog than sprint?");
-        questions.add("Do you have a lot of endurance?");
+    public String createquestion(){
+        return questions.get((int) (Math.random() * questions.size()));
+    }
         questions.add("What type of endurance would you say you have?");
         questions.add("How long can you run continuously?");
         questions.add("Do you like to feel close to dying?");

@@ -26,6 +26,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     JButton rankButton = new JButton("Click to see the rankings");
     JButton timebutton = new JButton("Click to input your time");
 	private int runnertime;
+    private Quiz Quiz = new Quiz();
     
     public Game() {
         // Use null layout so setBounds works properly
@@ -57,6 +58,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         buttonset(timebutton, 550,600, 300, 50);
         add(timebutton);
         knowrunner();
+        
     }
 
     // Force the window to open at a size big enough to fit your 1400x800 layout and button
@@ -104,10 +106,19 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 g2d.setColor(Color.black);
                 g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
                 g2d.drawString("Welcome to the game bro, " + runner.getName(), 400, 300);
+                g2d.drawString(Quiz.createquestion(), 400, 400);
                 timebutton.setVisible(false);
                 rankButton.setVisible(true);
                 break;
-                
+            case 'Q':
+                g2d.setColor(Color.white);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.setColor(Color.black);
+                g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
+                g2d.drawString("Quiz Screen", 600, 300);
+                rankButton.setVisible(false);
+                timebutton.setVisible(false);
+                break;
             case 'E':
 				//g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
                 rankButton.setVisible(false);
