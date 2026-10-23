@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 
-
 public class Game extends JPanel implements Runnable, KeyListener, MouseListener {
 
     private static final String[] EVENTS = {
@@ -23,29 +22,76 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private int divisionIndex = 5;   // starts on 6A
     private char screen;
     private Runner runner;
+    
     JButton rankButton = new JButton("Click to see the rankings");
     JButton timebutton = new JButton("Click to input your time");
-	private int runnertime;
-    private Quiz Quiz = new Quiz();
+    private int runnertime;
+    private Quiz quiz;
+    private int quizIndex = 0; // Tracks the current question
+    private ArrayList<String> allQuestions;
+
+    // Quiz option buttons & choices array
+    private JButton[] optionButtons = new JButton[3];
+    private final String[][] choices = {
+        {"Sprint / Short bursts", "Moderate / Steady", "High / Long distance"},
+        {"Under a mile", "1 to 3 miles", "3+ miles"},
+        {"Not really", "I could take it", "I love the pain!"},
+        {"Clumsy", "Average", "Very agile"},
+        {"None", "Soccer / Cross country", "Football / Basketball"},
+        {"Low", "Moderate", "Fully committed"},
+        {"Yes", "I maintain the same speed", "Prefer top speed instantly"},
+        {"Nah", "A little bit", "Always push through"}
+    };
     
     public Game() {
         // Use null layout so setBounds works properly
         setLayout(null);
         
-        // Setup button
-            rankButton.setBounds(550, 450, 300, 50);
-            rankButton.addActionListener(new ActionListener() {
+        quiz = new Quiz();
+        allQuestions = quiz.getQuestions();
+        
+        // Setup rankButton
+        rankButton.setBounds(550, 450, 300, 50);
+        rankButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                screen = 'E';
+                rankButton.setVisible(false); 
+                timebutton.setVisible(true);
+                repaint();
+            }
+        });
+        add(rankButton);
+        
+        // Setup Quiz Option Buttons (Step 2)
+        for (int i = 0; i < optionButtons.length; i++) {
+            optionButtons[i] = new JButton();
+            optionButtons[i].setBounds(550, 400 + (i * 70), 300, 50); 
+            optionButtons[i].setVisible(false); // Hidden initially
+            
+            optionButtons[i].addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    screen = 'E';
-                    rankButton.setVisible(false); 
-                    timebutton.setVisible(true);
-                    repaint();
+                    quizIndex++;
+                    if (quizIndex < allQuestions.size()) {
+                        updateQuizButtonsText();
+                        repaint();
+                    } else {
+                        // Quiz finished, switch to rankings screen 'E'
+                        screen = 'E';
+                        setQuizButtonsVisible(false);
+                        timebutton.setVisible(true);
+                        rankButton.setVisible(false);
+                        quizIndex = 0; // Reset index
+                        repaint();
+                    }
                 }
             });
-            add(rankButton);
-           
+            add(optionButtons[i]);
+        }
         
+        updateQuizButtonsText();
+
         new Thread(this).start();
         this.addKeyListener(this);
         this.addMouseListener(this);
@@ -55,13 +101,29 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         back = null;
         screen = 'S';
         loadData();
-        buttonset(timebutton, 550,600, 300, 50);
+        buttonset(timebutton, 550, 600, 300, 50);
         add(timebutton);
         knowrunner();
-        
     }
 
-    // Force the window to open at a size big enough to fit your 1400x800 layout and button
+    // Helper methods for managing quiz option buttons
+    private void setQuizButtonsVisible(boolean visible) {
+        for (JButton btn : optionButtons) {
+            if (btn != null) {
+                btn.setVisible(visible);
+            }
+        }
+    }
+
+    private void updateQuizButtonsText() {
+        if (quizIndex < choices.length) {
+            for (int i = 0; i < optionButtons.length; i++) {
+                optionButtons[i].setText(choices[quizIndex][i]);
+            }
+        }
+    }
+
+    // Force the window to open at a size big enough to fit your layout
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(1400, 800);
@@ -101,26 +163,47 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         switch (screen) {
             case 'S': 
                 g2d.setColor(Color.white);
-                      //g2d.drawImage(new ImageIcon(bi.getBackground()).getImage(),0,0,getWidth(),getHeight(),this);
-                g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
+                g2d.fillRect(0, 0, getWidth(), getHeight());
                 g2d.setColor(Color.black);
                 g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
-                g2d.drawString("Welcome to the game bro, " + runner.getName(), 400, 300);
-                g2d.drawString(Quiz.createquestion(), 400, 400);
+                g2d.drawString("Welcome to the game bro, " + runner.getName(), 300, 200);
+                
+                // Display current quiz question
+                if (quizIndex < allQuestions.size()) {
+                    g2d.drawString(allQuestions.get(quizIndex), 300, 300);
+                }
+
+                rankButton.setVisible(false);
                 timebutton.setVisible(false);
-                rankButton.setVisible(true);
+                setQuizButtonsVisible(true); // Show option buttons
                 break;
+                
             case 'Q':
                 g2d.setColor(Color.white);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
                 g2d.setColor(Color.black);
                 g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
                 g2d.drawString("Quiz Screen", 600, 300);
+                
                 rankButton.setVisible(false);
                 timebutton.setVisible(false);
+                setQuizButtonsVisible(false);
                 break;
+            case 'R':
+                g2d.setColor(Color.white);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.setColor(Color.black);
+                g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
+                g2d.drawString("Results Screen", 600, 300);
+                
+                rankButton.setVisible(false);
+                timebutton.setVisible(false);
+                setQuizButtonsVisible(false);
+                break;
+
+
             case 'E':
-				//g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+                setQuizButtonsVisible(false); // Hide quiz option buttons
                 rankButton.setVisible(false);
                 
                 g2d.setColor(Color.white);
@@ -167,7 +250,6 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                     g2d.setColor(Color.BLUE);
                     g2d.drawString("Your name: " + runner.getName(), 60, 750);
                     g2d.drawString("Your time: " + runner.time, 60, 780);
-                    //g2d.drawString("Your rank: " + getRunnerTime((int)runner.time), 60, 810);
                 }
                 break;
         }
@@ -199,6 +281,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         String runners = JOptionPane.showInputDialog(this, "Enter your name :");
         runner = new Runner(runners != null && !runners.trim().isEmpty() ? runners : "Runner");
     }
+
     private void timeint() {
         String input = JOptionPane.showInputDialog(this, "Enter your time:");
         if (input != null && !input.trim().isEmpty()) {
@@ -207,27 +290,19 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 timebutton.setVisible(false);
                 repaint();
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Invalid time format. Please enter a valid integer.");
+                JOptionPane.showMessageDialog(this, "Invalid time format. Please enter a valid number.");
             }
         }
     }
-    private  void buttonset(JButton button, int x, int y, int width, int height) {
-        timebutton.setBounds(x, y, width, height);
-        timebutton.addActionListener(new ActionListener() {
+
+    private void buttonset(JButton button, int x, int y, int width, int height) {
+        button.setBounds(x, y, width, height);
+        button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 timeint();
             }
         });
-    
-    }
-    public int getRunnerTime100(int runnerTime) {
-    if (runner.time <= 10.8) {
-        return -1;
-    }
-   // else{
-     //   runner.time = runnerTime;
-        return runnerTime;
     }
 
     @Override
@@ -245,25 +320,27 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     @Override
     public void keyPressed(KeyEvent e) {
         int k = e.getKeyCode();
-        if (k == 32) {
-            screen = 'E';
-            rankButton.setVisible(false);
-            repaint();
-        }    
-        if (k == KeyEvent.VK_RIGHT) {
-            eventIndex = (eventIndex + 1) % EVENTS.length;
-        } else if (k == KeyEvent.VK_LEFT) {
-            eventIndex = (eventIndex + EVENTS.length - 1) % EVENTS.length;
-        } else if (k == KeyEvent.VK_UP) {
-            divisionIndex = (divisionIndex + 1) % DIVISIONS.length;
-        } else if (k == KeyEvent.VK_DOWN) {
-            divisionIndex = (divisionIndex + DIVISIONS.length - 1) % DIVISIONS.length;
-        } else {
-            return;
+        
+        if(k==32){
+             screen = 'E' ;
         }
-        if (scraper.isLoaded()) {
-            updateRows();
-        }       
+        // Arrow key event/class navigation only works on screen 'E'
+        if (screen == 'E') {
+            if (k == KeyEvent.VK_RIGHT) {
+                eventIndex = (eventIndex + 1) % EVENTS.length;
+            } else if (k == KeyEvent.VK_LEFT) {
+                eventIndex = (eventIndex + EVENTS.length - 1) % EVENTS.length;
+            } else if (k == KeyEvent.VK_UP) {
+                divisionIndex = (divisionIndex + 1) % DIVISIONS.length;
+            } else if (k == KeyEvent.VK_DOWN) {
+                divisionIndex = (divisionIndex + DIVISIONS.length - 1) % DIVISIONS.length;
+            } else {
+                return;
+            }
+            if (scraper.isLoaded()) {
+                updateRows();
+            }
+        }
     }
 
     @Override
