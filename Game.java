@@ -88,8 +88,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                         recommendedEvent = calculateBestEvent();
                         setEventIndexToRecommended(recommendedEvent);
                         updateRows(); // Update rows for the recommended event
-
-                        screen = 'R';
+                        screen = 'R'; // Switch to results screen
                         setQuizButtonsVisible(false);
                         timebutton.setVisible(true);
                         rankButton.setVisible(false);
@@ -199,62 +198,39 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 timebutton.setVisible(false);
                 setQuizButtonsVisible(false);
                 break;
-        case 'R':
-           case 'R':
-    setQuizButtonsVisible(false);
-    rankButton.setVisible(false);
+                case 'R':
+               setQuizButtonsVisible(false);
+                rankButton.setVisible(false);
     
-    g2d.setColor(Color.white);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
+     g2d.setColor(Color.white);
+     g2d.fillRect(0, 0, getWidth(), getHeight());
     
-    g2d.setColor(Color.black);
-    g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
-    g2d.drawString("2026 UIL State Meet - Boys " + EVENTS[eventIndex]
-            + " (" + DIVISIONS[divisionIndex] + ")", 60, 80);
-
-    // Display Recommended Event Banner
-    g2d.setColor(new Color(139, 53, 153));
-    g2d.setFont(new Font("SansSerif", Font.BOLD, 22));
-    g2d.drawString("Recommended Event For You: " + recommendedEvent, 60, 120);
-
-    // column headings
-    g2d.setColor(new Color(139, 53, 153));
-    g2d.setFont(new Font("SansSerif", Font.BOLD, 28));
-    g2d.drawString("Place", 60, 170);
-    g2d.drawString("Name", 160, 170);
-    g2d.drawString("Grade", 560, 170);
-    g2d.drawString("School", 680, 170);
-    g2d.drawString("Time", 1100, 170);
-    g2d.drawString("Wind", 1250, 170);
-
-    // the results
-    g2d.setColor(Color.black);
-    g2d.setFont(new Font("SansSerif", Font.PLAIN, 28));
-    int y = 220;
-    for (String[] r : rows) {
-        g2d.drawString(r[0], 60, y);    // place
-        g2d.drawString(r[1], 160, y);   // name
-        g2d.drawString(r[2], 560, y);   // grade
-        g2d.drawString(r[3], 680, y);   // school
-        g2d.drawString(r[4], 1100, y);  // time
-        g2d.drawString(r[5], 1250, y);  // wind
-        y += 50;
-    }
-
-    // status message and controls
-    g2d.setColor(Color.YELLOW);
-    g2d.setFont(new Font("SansSerif", Font.PLAIN, 24));
-    if (!status.isEmpty()) {
-        g2d.drawString(status, 60, 650);
-    }
-    g2d.setColor(Color.GRAY);
-    g2d.drawString("Left/Right arrows: change event    Up/Down arrows: change class", 60, 700);
-    if(runner.time != 0) {
+     g2d.setColor(Color.black);
+       g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
+        g2d.drawString("Quiz Results & Recommendations", 400, 100);
+    
+    // Display the top recommended event
+      g2d.setColor(new Color(139, 53, 153));
+     g2d.setFont(new Font("SansSerif", Font.BOLD, 30));
+          g2d.drawString("Your Best Match: " + recommendedEvent, 400, 180);
+    
+    // Display all event scores for review
+      g2d.setColor(Color.darkGray);
+     g2d.setFont(new Font("SansSerif", Font.PLAIN, 22));
+      int scoreY = 240;
+      g2d.drawString("Event Point Breakdown:", 400, scoreY);
+      scoreY += 40;
+    
+         for (Map.Entry<String, Integer> entry : eventScores.entrySet()) {
+        g2d.drawString(entry.getKey() + ": " + entry.getValue() + " points", 420, scoreY);
+        scoreY += 35;
+        }
+    
+    // Instructions to move forward
         g2d.setColor(Color.BLUE);
-        g2d.drawString("Your name: " + runner.getName(), 60, 750);
-        g2d.drawString("Your time: " + runner.time, 60, 780);
-    }
-    break;
+        g2d.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        g2d.drawString("Press Spacebar to view the UIL rankings for your recommended event!", 400, scoreY + 20);
+        break;
 
             case 'E':
                 setQuizButtonsVisible(false); // Hide quiz option buttons
