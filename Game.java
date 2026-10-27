@@ -2,7 +2,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.swing.*;
 
 public class Game extends JPanel implements Runnable, KeyListener, MouseListener {
@@ -25,11 +28,13 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     
     JButton rankButton = new JButton("Click to see the rankings");
     JButton timebutton = new JButton("Click to input your time");
-    private int runnertime;
+   private Map<String, Integer> eventScores = new HashMap<>();
+
+
     private Quiz quiz;
     private int quizIndex = 0; // Tracks the current question
     private ArrayList<String> allQuestions;
-
+    private String recommendedEvent = "";
     // Quiz option buttons & choices array
     private JButton[] optionButtons = new JButton[3];
     private final String[][] choices = {
@@ -49,7 +54,9 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         
         quiz = new Quiz();
         allQuestions = quiz.getQuestions();
-        
+        for (String event : EVENTS) {
+            eventScores.put(event, 0);
+        }
         // Setup rankButton
         rankButton.setBounds(550, 450, 300, 50);
         rankButton.addActionListener(new ActionListener() {
@@ -78,7 +85,11 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                         repaint();
                     } else {
                         // Quiz finished, switch to rankings screen 'E'
-                        screen = 'E';
+                        recommendedEvent = calculateBestEvent();
+                        setEventIndexToRecommended(recommendedEvent);
+                        updateRows(); // Update rows for the recommended event
+
+                        screen = 'R';
                         setQuizButtonsVisible(false);
                         timebutton.setVisible(true);
                         rankButton.setVisible(false);
@@ -97,7 +108,6 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         this.addMouseListener(this);
         setFocusable(true); // Ensure panel receives key events
         requestFocusInWindow();
-        runnertime = 0;
         back = null;
         screen = 'S';
         loadData();
@@ -189,18 +199,62 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 timebutton.setVisible(false);
                 setQuizButtonsVisible(false);
                 break;
-            case 'R':
-                g2d.setColor(Color.white);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-                g2d.setColor(Color.black);
-                g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
-                g2d.drawString("Results Screen", 600, 300);
-                
-                rankButton.setVisible(false);
-                timebutton.setVisible(false);
-                setQuizButtonsVisible(false);
-                break;
+        case 'R':
+           case 'R':
+    setQuizButtonsVisible(false);
+    rankButton.setVisible(false);
+    
+    g2d.setColor(Color.white);
+    g2d.fillRect(0, 0, getWidth(), getHeight());
+    
+    g2d.setColor(Color.black);
+    g2d.setFont(new Font("SansSerif", Font.BOLD, 40));
+    g2d.drawString("2026 UIL State Meet - Boys " + EVENTS[eventIndex]
+            + " (" + DIVISIONS[divisionIndex] + ")", 60, 80);
 
+    // Display Recommended Event Banner
+    g2d.setColor(new Color(139, 53, 153));
+    g2d.setFont(new Font("SansSerif", Font.BOLD, 22));
+    g2d.drawString("Recommended Event For You: " + recommendedEvent, 60, 120);
+
+    // column headings
+    g2d.setColor(new Color(139, 53, 153));
+    g2d.setFont(new Font("SansSerif", Font.BOLD, 28));
+    g2d.drawString("Place", 60, 170);
+    g2d.drawString("Name", 160, 170);
+    g2d.drawString("Grade", 560, 170);
+    g2d.drawString("School", 680, 170);
+    g2d.drawString("Time", 1100, 170);
+    g2d.drawString("Wind", 1250, 170);
+
+    // the results
+    g2d.setColor(Color.black);
+    g2d.setFont(new Font("SansSerif", Font.PLAIN, 28));
+    int y = 220;
+    for (String[] r : rows) {
+        g2d.drawString(r[0], 60, y);    // place
+        g2d.drawString(r[1], 160, y);   // name
+        g2d.drawString(r[2], 560, y);   // grade
+        g2d.drawString(r[3], 680, y);   // school
+        g2d.drawString(r[4], 1100, y);  // time
+        g2d.drawString(r[5], 1250, y);  // wind
+        y += 50;
+    }
+
+    // status message and controls
+    g2d.setColor(Color.YELLOW);
+    g2d.setFont(new Font("SansSerif", Font.PLAIN, 24));
+    if (!status.isEmpty()) {
+        g2d.drawString(status, 60, 650);
+    }
+    g2d.setColor(Color.GRAY);
+    g2d.drawString("Left/Right arrows: change event    Up/Down arrows: change class", 60, 700);
+    if(runner.time != 0) {
+        g2d.setColor(Color.BLUE);
+        g2d.drawString("Your name: " + runner.getName(), 60, 750);
+        g2d.drawString("Your time: " + runner.time, 60, 780);
+    }
+    break;
 
             case 'E':
                 setQuizButtonsVisible(false); // Hide quiz option buttons
@@ -305,6 +359,77 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         });
     }
 
+    private void awardPointsForAnswer(int qIdx, int cIdx) {
+        switch (qIdx) {
+            case 0:
+                if (cIdx == 0) { addPoints("100 meter Dash", 5); addPoints("200 meter Dash", 5); }
+                else if (cIdx == 1) { addPoints("400 meter Dash", 5); addPoints("800 meter Run", 5); }
+                else { addPoints("1600 meter Run", 5); addPoints("3200 meter Run", 5); }
+                break;
+            case 1:
+                if (cIdx == 0) { addPoints("100 meter Dash", 5); addPoints("110 meter Hurdles", 3); }
+                else if (cIdx == 1) { addPoints("400 meter Dash", 5); addPoints("800 meter Run", 5); }
+                else { addPoints("1600 meter Run", 5); addPoints("3200 meter Run", 5); }
+                break;
+            case 2:
+                if (cIdx == 0) { addPoints("100 meter Dash", 3); }
+                else if (cIdx == 1) { addPoints("400 meter Dash", 4); addPoints("200 meter Dash", 3); }
+                else { addPoints("3200 meter Run", 5); addPoints("1600 meter Run", 5); addPoints("800 meter Run", 4); }
+                break;
+            case 3:
+                if (cIdx == 0) { addPoints("100 meter Dash", 3); }
+                else if (cIdx == 1) { addPoints("200 meter Dash", 3); addPoints("400 meter Dash", 3); }
+                else { addPoints("110 meter Hurdles", 6); addPoints("300 meter Hurdles", 6); }
+                break;
+            case 4:
+                if (cIdx == 0) { addPoints("100 meter Dash", 3); }
+                else if (cIdx == 1) { addPoints("400 meter Dash", 4); addPoints("800 meter Run", 3); }
+                else { addPoints("1600 meter Run", 5); addPoints("3200 meter Run", 5); }
+                break;
+            case 5:
+                if (cIdx == 0) { addPoints("100 meter Dash", 2); }
+                else if (cIdx == 1) { addPoints("400 meter Dash", 3); }
+                else { addPoints("3200 meter Run", 5); addPoints("1600 meter Run", 5); }
+                break;
+            case 6:
+                if (cIdx == 0) { addPoints("800 meter Run", 4); addPoints("1600 meter Run", 4); }
+                else if (cIdx == 1) { addPoints("100 meter Dash", 4); }
+                else { addPoints("200 meter Dash", 4); addPoints("400 meter Dash", 4); }
+                break;
+            case 7:
+                if (cIdx == 0) { addPoints("100 meter Dash", 2); }
+                else if (cIdx == 1) { addPoints("400 meter Dash", 4); }
+                else { addPoints("3200 meter Run", 5); addPoints("1600 meter Run", 5); }
+                break;
+            default:
+                addPoints(EVENTS[cIdx % EVENTS.length], 2);
+                break;
+        }
+    }
+    private void addPoints(String eventName, int points) {
+        eventScores.put(eventName, eventScores.getOrDefault(eventName, 0) + points);
+    }
+
+    private String calculateBestEvent() {
+        String best = EVENTS[0];
+        int maxPts = -1;
+        for (Map.Entry<String, Integer> entry : eventScores.entrySet()) {
+            if (entry.getValue() > maxPts) {
+                maxPts = entry.getValue();
+                best = entry.getKey();
+            }
+        }
+        return best;
+    }
+
+    private void setEventIndexToRecommended(String eventName) {
+        for (int i = 0; i < EVENTS.length; i++) {
+            if (EVENTS[i].equals(eventName)) {
+                eventIndex = i;
+                break;
+            }
+        }
+    }
     @Override
     public void mouseClicked(MouseEvent e) {}
 
